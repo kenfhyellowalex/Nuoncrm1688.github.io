@@ -19,6 +19,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&family=Battambang:wght@400;700&family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script>
+      // Mock process.env for browser compatibility if not using a bundler
+      window.process = { env: { API_KEY: '' } };
+      
       tailwind.config = {
         theme: {
           extend: {
@@ -72,5 +75,10 @@
 </head>
   <body>
     <div id="root"></div>
+    <!-- 
+      IMPORTANT: For GitHub Pages, you MUST compile this index.tsx to index.js.
+      Directly importing .tsx in a browser will cause a white screen.
+    -->
+    <script type="module" src="./index.tsx"></script>
   </body>
 </html>
