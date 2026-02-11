@@ -2,10 +2,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { SalesData, Customer } from "../types.ts";
 
-// Always use the named parameter for apiKey and initialize strictly with process.env.API_KEY.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-// Fix: Exporting generateCRMInsight as expected by DashboardHome and AISalesIntelligence
 /**
  * Generates CRM insights using Gemini AI.
  * @param salesData Daily sales performance across segments.
@@ -14,6 +10,13 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
  */
 export async function generateCRMInsight(salesData: SalesData[], customers: Customer[]): Promise<string> {
   try {
+    // Check if API key exists to provide a friendly error if not
+    if (!process.env.API_KEY) {
+      return "AI Strategy services are unavailable: Missing API Configuration.";
+    }
+
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    
     const prompt = `
       You are a strategic business analyst for NOUN CRM, a multi-tenant retail platform operating in SE Asia.
       Analyze the following data and provide a concise, high-impact executive summary (max 250 words).
@@ -37,7 +40,6 @@ export async function generateCRMInsight(salesData: SalesData[], customers: Cust
       contents: prompt,
     });
 
-    // Fix: Access .text property directly from GenerateContentResponse
     return response.text || "Unable to generate insights at this time due to lack of response content.";
   } catch (error) {
     console.error("Gemini Insight Error:", error);

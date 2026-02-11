@@ -28,7 +28,6 @@
 </script>
 
     <script>
-      window.process = { env: { API_KEY: '' } };
       const logToUI = (msg, type = 'info') => {
         const diag = document.getElementById('diagnostic-info');
         if (!diag) return;
@@ -68,7 +67,6 @@
       const status = document.getElementById('boot-status');
       
       async function tryFetch(path) {
-        // Always create an absolute URL from the path relative to the current location
         const absoluteUrl = new URL(path, window.location.href).href;
         
         const extensions = ['', '.tsx', '.ts'];
@@ -77,7 +75,6 @@
           try {
             const res = await fetch(fetchUrl);
             if (res.ok) {
-              // CRITICAL: Return the final absolute URL from the response
               return { url: res.url, text: await res.text() };
             }
           } catch (e) {
@@ -97,17 +94,14 @@
         const { url: actualUrl, text: rawSource } = await tryFetch(url);
         let source = rawSource;
 
-        // Catch ALL relative imports starting with ./ or ../
         const importRegex = /import\s+.*?\s+from\s+['"](\.\.?\/[^'"]+)['"]/g;
         const matches = [...source.matchAll(importRegex)];
         
         for (const match of matches) {
           const depPath = match[1];
-          // Use the absolute 'actualUrl' as the base for the dependency
           const depUrl = new URL(depPath, actualUrl).href;
           const depBlobUrl = await fetchAndTranspile(depUrl);
           
-          // Precise replacement in the source code
           source = source.split(`'${depPath}'`).join(`'${depBlobUrl}'`);
           source = source.split(`"${depPath}"`).join(`"${depBlobUrl}"`);
         }
@@ -127,7 +121,6 @@
 
       async function boot() {
         try {
-          // Entry point must be a relative path that we then resolve absolutely
           const entryBlobUrl = await fetchAndTranspile('./index.tsx');
           logToUI("System Mapped. Launching Interface...");
           
