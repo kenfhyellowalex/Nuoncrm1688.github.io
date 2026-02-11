@@ -7,48 +7,11 @@
     <meta name="theme-color" content="#0047AB" />
     <title>NOUN CRM</title>
     
-    <!-- Scripts & Styles -->
+    <!-- Core Dependencies -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&family=Battambang:wght@400;700&family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     
-    <script>
-      // 1. Setup Environment
-      window.process = { env: { API_KEY: '' } };
-      
-      // 2. Error Reporting Logic
-      window.onerror = function(msg, url, line, col, error) {
-        const diag = document.getElementById('diagnostic-info');
-        if (diag) {
-          diag.style.display = 'block';
-          diag.innerHTML += `<div class="mb-2 p-2 bg-red-900/50 rounded border border-red-500">
-            <p class="font-bold text-red-400 text-[10px] uppercase">Runtime Error:</p>
-            <p class="text-xs">${msg}</p>
-            <p class="text-[9px] opacity-50">${url}:${line}</p>
-          </div>`;
-        }
-        return false;
-      };
-
-      // 3. Tailwind Configuration
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: { brand: { yellow: '#FFD700', blue: '#0047AB', brown: '#4B2C20', light: '#F9FAFB' } },
-            fontFamily: { sans: ['Poppins', 'sans-serif'], heading: ['Montserrat', 'sans-serif'] }
-          }
-        }
-      };
-    </script>
-
-    <style>
-      body { background-color: #F9FAFB; margin: 0; }
-      #initial-loader { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #0047AB; z-index: 9999; transition: opacity 0.5s ease; }
-      #diagnostic-info { position: fixed; bottom: 20px; left: 20px; right: 20px; background: #111; color: #0f0; p: 20px; border-radius: 15px; font-family: monospace; z-index: 10001; display: none; max-height: 40vh; overflow-y: auto; border: 2px solid #333; padding: 15px; }
-      .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 15px; }
-      @keyframes spin { to { transform: rotate(360deg); } }
-    </style>
-
     <script type="importmap">
 {
   "imports": {
@@ -62,53 +25,99 @@
   }
 }
 </script>
+
+    <script>
+      // 1. Mock Environment
+      window.process = { env: { API_KEY: '' } };
+      
+      // 2. Custom Logger for Diagnostic UI
+      const logToUI = (msg, type = 'info') => {
+        const diag = document.getElementById('diagnostic-info');
+        if (!diag) return;
+        diag.style.display = 'block';
+        const entry = document.createElement('div');
+        entry.className = `mb-1 p-2 rounded text-[10px] font-mono ${type === 'error' ? 'bg-red-900/30 text-red-400 border border-red-500/30' : 'text-green-400'}`;
+        entry.innerHTML = `[${new Date().toLocaleTimeString()}] ${type.toUpperCase()}: ${msg}`;
+        diag.appendChild(entry);
+        diag.scrollTop = diag.scrollHeight;
+      };
+
+      window.onerror = (m, u, l) => logToUI(`${m} at ${u}:${l}`, 'error');
+    </script>
+
+    <style>
+      body { background-color: #0047AB; margin: 0; font-family: 'Poppins', sans-serif; }
+      #initial-loader { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0047AB; z-index: 9999; }
+      #diagnostic-info { position: fixed; bottom: 20px; left: 20px; right: 20px; background: #000; padding: 15px; border-radius: 12px; max-height: 30vh; overflow-y: auto; display: none; z-index: 10000; border: 1px solid #333; }
+      .spinner { width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.1); border-top-color: #FFD700; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
   </head>
   <body>
     <div id="root"></div>
 
-    <!-- UI Overlay for Loading & Errors -->
     <div id="initial-loader">
-      <div class="text-center px-6">
-        <div class="spinner"></div>
-        <p class="text-white font-black uppercase tracking-[0.2em] text-[10px]">Initializing NOUN CRM...</p>
-        <p id="loading-subtext" class="text-blue-300 text-[9px] mt-2 uppercase opacity-50">Transpiling TypeScript Components</p>
-      </div>
+      <div class="spinner"></div>
+      <p class="text-white font-black uppercase tracking-[0.3em] text-[11px] italic">System Booting...</p>
+      <p id="boot-status" class="text-blue-300/60 text-[9px] mt-4 uppercase font-bold tracking-widest">Preparing Manual Fetcher</p>
     </div>
 
-    <!-- Hidden by default, shows if it crashes -->
     <div id="diagnostic-info">
-      <h3 class="text-xs font-bold mb-3 border-b border-gray-700 pb-2">SYSTEM DIAGNOSTICS</h3>
+      <h4 class="text-white text-[10px] font-black uppercase mb-3 border-b border-white/10 pb-1">Boot Logs</h4>
     </div>
 
     <!-- 
-      We specify data-type="module" but Babel handles the fetch.
-      If GitHub returns 404 or MIME error, Babel's internal fetcher usually gives a better error.
+      THE BOOTLOADER:
+      We fetch the TSX file manually as text, compile it with Babel, 
+      and inject it as a script. This bypasses the browser's MIME restrictions.
     -->
-    <script 
-      type="text/babel" 
-      data-type="module" 
-      data-presets="typescript,react" 
-      src="./index.tsx"
-    ></script>
+    <script type="module">
+      const status = document.getElementById('boot-status');
+      
+      async function boot() {
+        try {
+          logToUI("Initializing fetch sequence...");
+          status.innerText = "Fetching index.tsx";
+          
+          const response = await fetch('./index.tsx');
+          if (!response.ok) throw new Error(`HTTP ${response.status} while fetching index.tsx`);
+          
+          const rawCode = await response.text();
+          logToUI("Source received, transpiling...");
+          status.innerText = "Compiling components";
 
-    <script>
-      // Safety Timer: If app doesn't load in 10s, show diagnostic info
-      const loadTimer = setTimeout(() => {
-        const root = document.getElementById('root');
-        if (!root || root.children.length === 0) {
-          document.getElementById('diagnostic-info').style.display = 'block';
-          document.getElementById('loading-subtext').innerText = 'Load Timeout - Check Diagnostics Below';
-          document.getElementById('loading-subtext').classList.add('text-red-400');
+          const compiled = Babel.transform(rawCode, {
+            presets: ['typescript', 'react'],
+            filename: 'index.tsx'
+          }).code;
+
+          logToUI("Transpilation successful. Injecting...");
+          status.innerText = "Starting React Engine";
+
+          const script = document.createElement('script');
+          script.type = 'module';
+          script.textContent = compiled;
+          document.body.appendChild(script);
+
+        } catch (err) {
+          logToUI(err.message, 'error');
+          status.innerText = "BOOT FAILED";
+          status.className = "text-red-400 text-[9px] mt-4 uppercase font-bold";
         }
-      }, 12000);
+      }
 
-      // Listener to hide loader when React mounts
-      const observer = new MutationObserver((mutations) => {
+      // Small delay to ensure DOM is ready
+      setTimeout(boot, 500);
+
+      // Hide loader when React mounts
+      const observer = new MutationObserver(() => {
         if (document.getElementById('root').children.length > 0) {
           const loader = document.getElementById('initial-loader');
           loader.style.opacity = '0';
-          setTimeout(() => loader.remove(), 500);
-          clearTimeout(loadTimer);
+          setTimeout(() => {
+             loader.remove();
+             document.getElementById('diagnostic-info').remove();
+          }, 500);
           observer.disconnect();
         }
       });
