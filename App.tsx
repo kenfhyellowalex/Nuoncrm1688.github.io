@@ -1,20 +1,21 @@
+
 import React, { useState } from 'react';
-import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import Shop from './pages/Shop';
-import Booking from './pages/Booking';
-import CRM from './pages/CRM';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import Login from './pages/Login';
-import Checkout from './pages/Checkout';
-import OrderStatus from './pages/OrderStatus';
-import BookingStatus from './pages/BookingStatus';
-import RiderPortal from './pages/RiderPortal';
-import { Product, CountryCode, CartItem, DbUser } from './types';
-import { COUNTRIES } from './constants';
-import { TRANSLATIONS } from './translations';
-import { api } from './services/api';
+import Navbar from './components/Navbar.tsx';
+import Hero from './components/Hero.tsx';
+import Shop from './pages/Shop.tsx';
+import Booking from './pages/Booking.tsx';
+import CRM from './pages/CRM.tsx';
+import About from './pages/About.tsx';
+import Contact from './pages/Contact.tsx';
+import Login from './pages/Login.tsx';
+import Checkout from './pages/Checkout.tsx';
+import OrderStatus from './pages/OrderStatus.tsx';
+import BookingStatus from './pages/BookingStatus.tsx';
+import RiderPortal from './pages/RiderPortal.tsx';
+import { Product, CountryCode, CartItem, DbUser } from './types.ts';
+import { COUNTRIES } from './constants.ts';
+import { TRANSLATIONS } from './translations.ts';
+import { api } from './services/api.ts';
 
 const App: React.FC = () => {
   const [page, setPage] = useState<string>('home');
