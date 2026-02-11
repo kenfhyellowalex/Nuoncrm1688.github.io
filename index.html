@@ -12,7 +12,7 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     
-    <!-- Simplified Import Map: Ensures ONE version of React is used -->
+    <!-- PINNED VERSIONS: Ensures ONE version of React is used to prevent 'useContext' errors -->
     <script type="importmap">
 {
   "imports": {
@@ -67,18 +67,24 @@
       const moduleCache = new Map();
       const status = document.getElementById('boot-status');
       
-      async function tryFetch(url) {
-        const res = await fetch(url);
-        if (res.ok) return { url, text: await res.text() };
+      async function tryFetch(path) {
+        // Always create an absolute URL from the path relative to the current location
+        const absoluteUrl = new URL(path, window.location.href).href;
         
-        // If not found and no extension, try common ones
-        if (!url.endsWith('.ts') && !url.endsWith('.tsx')) {
-          const tsRes = await fetch(url + '.ts');
-          if (tsRes.ok) return { url: url + '.ts', text: await tsRes.text() };
-          const tsxRes = await fetch(url + '.tsx');
-          if (tsxRes.ok) return { url: url + '.tsx', text: await tsxRes.text() };
+        const extensions = ['', '.tsx', '.ts'];
+        for (const ext of extensions) {
+          const fetchUrl = absoluteUrl + ext;
+          try {
+            const res = await fetch(fetchUrl);
+            if (res.ok) {
+              // CRITICAL: Return the final absolute URL from the response
+              return { url: res.url, text: await res.text() };
+            }
+          } catch (e) {
+            continue;
+          }
         }
-        throw new Error(`HTTP ${res.status}: ${url}`);
+        throw new Error(`Failed to locate module: ${path}`);
       }
 
       async function fetchAndTranspile(url) {
@@ -97,10 +103,11 @@
         
         for (const match of matches) {
           const depPath = match[1];
+          // Use the absolute 'actualUrl' as the base for the dependency
           const depUrl = new URL(depPath, actualUrl).href;
           const depBlobUrl = await fetchAndTranspile(depUrl);
           
-          // Precise replacement to ensure only quoted paths are swapped
+          // Precise replacement in the source code
           source = source.split(`'${depPath}'`).join(`'${depBlobUrl}'`);
           source = source.split(`"${depPath}"`).join(`"${depBlobUrl}"`);
         }
@@ -120,8 +127,9 @@
 
       async function boot() {
         try {
+          // Entry point must be a relative path that we then resolve absolutely
           const entryBlobUrl = await fetchAndTranspile('./index.tsx');
-          logToUI("Interface Ready. Executing Engine...");
+          logToUI("System Mapped. Launching Interface...");
           
           const script = document.createElement('script');
           script.type = 'module';
